@@ -1,1 +1,0 @@
-  -L"D:/Projects/Dot_matrix_led_panel/Communication_with_LED_Panel_HD-D16/SDK 3.0_TestVersion2/SDKNetApi/lib64"  -lHCatNet -lws2_32 -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 
