@@ -14,20 +14,39 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Debug)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib64)
+
+# Add TinyXML2 source files
+set(TINYXML2_SOURCES 
+    ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool/tinyxml2.cpp
+)
+set(TINYXML2_HEADERS 
+    ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool/tinyxml2.h
+)
+
+# Create a library target for TinyXML2
+add_library(tinyxml2 STATIC ${TINYXML2_SOURCES} ${TINYXML2_HEADERS})
+
+# Set include directory for TinyXML2
+target_include_directories(tinyxml2 PUBLIC 
+    ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool
+)
+
 # Executable
 add_executable(SDKNetApp ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
-   
-target_link_libraries(SDKNetApp HCatNet)
-
-
-# Include ArduinoJson
-target_include_directories(SDKNetApp PRIVATE ${CMAKE_SOURCE_DIR}/include)
-# Include the external library's root directly
-target_include_directories(SDKNetApp PRIVATE ${CMAKE_SOURCE_DIR}/include/ArduinoJson)
+# Include directories
+target_include_directories(SDKNetApp PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/ArduinoJson
+    ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool  # For TinyXML2
+)
 
 # Link libraries
-target_link_libraries(SDKNetApp ws2_32)
+target_link_libraries(SDKNetApp 
+    HCatNet
+    tinyxml2  # Link our TinyXML2 library
+    ws2_32
+)
 
 # Definitions
 target_compile_definitions(SDKNetApp PRIVATE 

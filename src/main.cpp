@@ -365,6 +365,9 @@ string gantryResponseConfig = R"({
                             "    <in method=\"GetAdminModeInfo\"/>\n" \
                             "</sdk>";
 
+
+
+// Callback function to handle received data
 static void ReadData(HSession *currSession, const char *data, huint32 len, void *userData) {
     printf("--------------Read Data:--------------\n");   
     printf("  currSession: %p,\t userData: %p,\t len: %u\n", (void*)currSession, userData, (unsigned int)len);
@@ -375,6 +378,7 @@ static void ReadData(HSession *currSession, const char *data, huint32 len, void 
     Quit(core);
 }
 
+// Callback function to handle error codes
 static void DebugLog(HSession *currSession, const char *log, huint32 len, void *userData) {
     printf("--------------Debug log:--------------\n");
     printf("  currSession: %p,\t userData: %p,\t len: %u\n", (void*)currSession, userData, (unsigned int)len);
@@ -383,6 +387,8 @@ static void DebugLog(HSession *currSession, const char *log, huint32 len, void *
     fflush(stdout);
 }
 
+
+// Callback function to handle connection status
 static void NetStatus(HSession *currSession, eNetStatus status, void *userData) {
     printf("--------------NetStatus:--------------\n");
     printf("  currSession: %p,\t userData: %p\n", (void*)currSession, userData);
@@ -421,7 +427,7 @@ static void DeviceInfo(HSession *currSession, const char *id, huint32 idLen, con
 }
 */
 
-// Graceful shutdown function
+// Graceful shutdown function when Ctrl+C is pressed  or window is closed
 BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
     if (dwCtrlType == CTRL_C_EVENT || dwCtrlType == CTRL_CLOSE_EVENT) {
         g_shutdown = true;
@@ -443,6 +449,7 @@ BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
 //         int errorCode_;
 //     };
 
+// Function to upload the text to the display
 void Display(HSession* session) {
     char finalXml[4096];
     const char* xmlTemplate = nullptr;
