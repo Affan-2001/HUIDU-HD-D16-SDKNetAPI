@@ -4,12 +4,12 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "D:\\Projects\\Dot_matrix_led_panel\\Communication_with_LED_Panel_HD-D16\\SDK 3.0_TestVersion2\\SDKNetApi\\include",
-                "D:\\Projects\\Dot_matrix_led_panel\\Communication_with_LED_Panel_HD-D16\\SDK 3.0_TestVersion2\\SDKNetApi\\src\\HCatEvent",
-                "D:\\Projects\\Dot_matrix_led_panel\\Communication_with_LED_Panel_HD-D16\\SDK 3.0_TestVersion2\\SDKNetApi\\src\\HCatNet",
-                "D:\\Projects\\Dot_matrix_led_panel\\Communication_with_LED_Panel_HD-D16\\SDK 3.0_TestVersion2\\SDKNetApi\\src\\HCatNet\\Net",
-                "D:\\Projects\\Dot_matrix_led_panel\\Communication_with_LED_Panel_HD-D16\\SDK 3.0_TestVersion2\\SDKNetApi\\src\\HCatEvent\\HCatNet",
-                "D:\\Projects\\Dot_matrix_led_panel\\Communication_with_LED_Panel_HD-D16\\SDK 3.0_TestVersion2\\SDKNetApi\\src"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src\\HCatEvent",
+                "${workspaceFolder}/src\\HCatNet",
+                "${workspaceFolder}/src\\HCatNet\\Net",
+                "${workspaceFolder}/src\\HCatEvent\\HCatNet",
+                "${workspaceFolder}/src"
                 
             ],
             "defines": [

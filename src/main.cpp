@@ -839,8 +839,6 @@ std::string getMainLocalIPAddress() {
     return addresses.empty() ? "" : addresses[0];
 }
 
-
-
 int main() {    
 
     // Set up console handler
@@ -962,7 +960,7 @@ int main() {
 
    
  
-    printf("Socket created and bound to %s : %d",mainIP.c_str(), SERVER_PORT);    
+    printf("Socket created and bound to %s : %d \n",mainIP.c_str(), SERVER_PORT);    
 
     string lastMessage;  // Store the last received message
    
