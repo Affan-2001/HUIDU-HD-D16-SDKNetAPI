@@ -1,12 +1,18 @@
-#include <string>
+//#include <string>
 #include <iostream>
-#include <thread>
+// #include <thread>
 #include "ICApi.h"
 #include <winsock2.h>
 #include <ArduinoJson.h>
 #include "tinyxml2.h"
 #include <windows.h>
-#include <fcntl.h>
+//#include <fcntl.h>
+#include <vector>
+#include <algorithm> 
+
+#include <ws2tcpip.h>
+
+// #pragma comment(lib, "ws2_32.lib")
 
 using namespace std;
 using namespace ArduinoJson::V731HB42;
@@ -28,8 +34,11 @@ const char* Name = nullptr;         // This is the variable that will be receivi
 const char* ScreenFunc= nullptr;    // This is the variable that will be receiving the settings of what to do with the data received exmaple change the brioghtness or turn the display on or off
 const char* IP2Set = nullptr;
 string IPData = "";
+std::vector<std::string> IPDB = {"192.168.10.60"};
 
-#define IP "192.168.10.60"
+//#define SERVER_IP           "192.168.10.11" 
+#define SERVER_PORT         5005            // The port to listen on (must match server's port)
+
 
 string gantry_IN =      R"({
                             "ServertoDevice": {
@@ -54,7 +63,7 @@ string gantry_OUT =      R"({
                             "ServertoDevice": {
                                 "Type": "Command",
                                 "Device": "Gantry Out",
-                                "IP":"192.168.10.27",
+                                "IP":"192.168.10.60",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Bay 1", "Value": "TL55461" },
@@ -73,7 +82,7 @@ string gate_IN =        R"({
                             "ServertoDevice": {
                                 "Type": "Command",
                                 "Device": "Gate In",
-                                "IP":"192.168.10.27",
+                                "IP":"192.168.10.60",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Data", "Value": "GXP-468" }
@@ -85,7 +94,7 @@ string gate_OUT =       R"({
                             "ServertoDevice": {
                                 "Type": "Command",
                                 "Device": "Gate Out",
-                                "IP":"192.168.10.27",
+                                "IP":"192.168.10.60",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Data", "Value": "AXY-683" }
@@ -97,10 +106,10 @@ string gateConfig  =    R"({
                             "ServertoDevice": {
                                 "Type": "Configuration",
                                 "Device": "Gate In",
-                                "IP":"192.168.10.27",
+                                "IP":"192.168.10.60",
                                 "Port":10001,
                                 "Data": [
-                                { "Name": "Brightness", "Value": "5" }
+                                { "Name": "Brightness", "Value": "100" }
                                 ]
                             }
                         })";
@@ -109,7 +118,7 @@ string gateConfig1 =    R"({
                             "ServertoDevice": {
                                 "Type": "Configuration",
                                 "Device": "Gate Out",
-                                "IP":"192.168.10.27",
+                                "IP":"192.168.10.60",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Brightness", "Value": "10" }
@@ -133,7 +142,7 @@ string ConfigPowerOn =    R"({
                             "ServertoDevice": {
                                 "Type": "Configuration",
                                 "Device": "Gate Out",
-                                "IP":"192.168.10.27",
+                                "IP":"192.168.10.60",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Screen", "Value": "OpenScreen" }
@@ -145,7 +154,7 @@ string ConfigPowerOff = R"({
                             "ServertoDevice": {
                                 "Type": "Configuration",
                                 "Device": "Gate Out",
-                                "IP":"192.168.10.27",
+                                "IP":"192.168.10.60",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Screen", "Value": "CloseScreen" }
@@ -158,10 +167,10 @@ string SetIPCommand = R"({
                     "ServertoDevice": {
                         "Type": "Configuration",
                         "Device": "Gate Out",
-                        "IP":"192.168.10.62",
+                        "IP":"192.168.10.60",
                         "Port":10001,
                         "Data": [
-                        { "Name": "SetIP", "Value": "192.168.10.60" }
+                        { "Name": "SetIP", "Value": "192.168.10.61" }
                         ]
                     }
                 })";
@@ -170,7 +179,7 @@ string GetIPCommand = R"({
                     "ServertoDevice": {
                         "Type": "Configuration",
                         "Device": "Gate Out",
-                        "IP":"192.168.10.27",
+                        "IP":"192.168.10.60",
                         "Port":10001,
                         "Data": [
                         { "Name": "GetIP", "Value": "" }
@@ -199,8 +208,7 @@ string gantryResponseConfig = R"({
                                 })";
 
 
-#define SERVER_IP           "192.168.10.75" 
-#define SERVER_PORT         5005            // The port to listen on (must match server's port)
+
 
 #define Gate_IN_Greeting    "پی ایس او فیصل آباد ڈپو میں خوش آمدید"
 #define Gate_OUT_Greeting    "پی ایس او فیصل آباد ڈپو خدا حافظ"
@@ -427,6 +435,10 @@ static void DeviceInfo(HSession *currSession, const char *id, huint32 idLen, con
 }
 */
 
+// function to get ip adress of the computer
+
+
+
 // Graceful shutdown function when Ctrl+C is pressed  or window is closed
 BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
     if (dwCtrlType == CTRL_C_EVENT || dwCtrlType == CTRL_CLOSE_EVENT) {
@@ -644,8 +656,13 @@ int deserializeJson(string json) {
         cout << "Error: JSON missing 'IP' field" << endl;
         return 0;
     }
-    Device_IP = ServertoDevice["IP"];
+    if (std::find(IPDB.begin(), IPDB.end(), ServertoDevice["IP"]) == IPDB.end()){
+        std::cout << "IP not found in the array!" << std::endl;
+        return 0;
+    }
 
+        Device_IP = ServertoDevice["IP"];
+    
     if (!ServertoDevice.containsKey("Port")) {
         cout << "Error: JSON missing 'Port' field" << endl;
         return 0;
@@ -729,6 +746,101 @@ void cleanup_resources(SOCKET sock, HSession* session) {
     printf("Resources cleaned up successfully\n");
 }
 
+
+// Function to get local IP addresses
+std::vector<std::string> getLocalIPAddresses() {
+    std::vector<std::string> ipAddresses;
+    
+    // Initialize Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cerr << "WSAStartup failed" << std::endl;
+        return ipAddresses;
+    }
+    
+    // Get the local hostname
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+        std::cerr << "Error getting hostname" << std::endl;
+        WSACleanup();
+        return ipAddresses;
+    }
+    
+    std::cout << "Hostname: " << hostname << std::endl;
+    
+    // Set up hints for getaddrinfo
+    struct addrinfo hints, *res;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;      // IPv4
+    hints.ai_socktype = SOCK_STREAM;
+    
+    // Get address info for the hostname
+    if (getaddrinfo(hostname, NULL, &hints, &res) != 0) {
+        std::cerr << "Error getting address info" << std::endl;
+        WSACleanup();
+        return ipAddresses;
+    }
+    
+    // Iterate through all addresses
+    char ipstr[INET_ADDRSTRLEN];
+    for (struct addrinfo* p = res; p != NULL; p = p->ai_next) {
+        struct sockaddr_in* ipv4 = (struct sockaddr_in*)p->ai_addr;
+        inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
+        std::string ip = std::string(ipstr);
+        
+        // Add IP address if it's not a loopback address
+        if (ip != "127.0.0.1") {
+            ipAddresses.push_back(ip);
+        }
+    }
+    
+    // Clean up
+    freeaddrinfo(res);
+    WSACleanup();
+    
+    return ipAddresses;
+}
+
+// Function to get the most likely "main" IP address
+std::string getMainLocalIPAddress() {
+    auto addresses = getLocalIPAddresses();
+    
+    // First look for addresses in the 192.168.x.x range (common for home networks)
+    for (const auto& ip : addresses) {
+        if (ip.substr(0, 8) == "192.168.") {
+            return ip;
+        }
+    }
+    
+    // Then look for 10.x.x.x addresses (common for larger networks)
+    for (const auto& ip : addresses) {
+        if (ip.substr(0, 3) == "10.") {
+            return ip;
+        }
+    }
+    
+    // Then look for 172.16.x.x through 172.31.x.x addresses
+    for (const auto& ip : addresses) {
+        if (ip.substr(0, 4) == "172." && 
+            std::stoi(ip.substr(4, ip.find('.', 4) - 4)) >= 16 && 
+            std::stoi(ip.substr(4, ip.find('.', 4) - 4)) <= 31) {
+            return ip;
+        }
+    }
+    
+    // If we haven't found a private address yet, return the first non-APIPA address
+    for (const auto& ip : addresses) {
+        if (ip.substr(0, 8) != "169.254.") {
+            return ip;
+        }
+    }
+    
+    // As a last resort, return any address we found
+    return addresses.empty() ? "" : addresses[0];
+}
+
+
+
 int main() {    
 
     // Set up console handler
@@ -742,7 +854,11 @@ int main() {
     struct sockaddr_in server_addr, client_addr;
     char buffer[2048];
     int addr_len = sizeof(client_addr);
-    
+
+     // Get and display the main IP address
+     std::string mainIP = getMainLocalIPAddress();
+    //  std::cout << "\nMain IP address: " << (mainIP.empty() ? "Not found" : mainIP) << std::endl;
+
     // Create the event core.
     core = CreateEventCore();
     if (!core) {
@@ -794,7 +910,7 @@ int main() {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);  // The port to listen on
-    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);  // 0.0.0.0 listens on all available network interfaces
+    server_addr.sin_addr.s_addr = inet_addr(mainIP.c_str());  // 0.0.0.0 listens on all available network interfaces
 
     // Bind the socket to the specified IP address and port
     if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) 
@@ -807,22 +923,22 @@ int main() {
 
     // running tests 
     // cout<<"Display Off"<<endl;
-    //  deserializeJson(ConfigPowerOff);
-    //  ScreenFunction(session); // Call the ScreenFunction to turn off the display
-    //  Sleep(30000);
-    //  cout<<"Display On"<<endl;
+    // deserializeJson(ConfigPowerOff);
+    // ScreenFunction(session); // Call the ScreenFunction to turn off the display
+    // Sleep(30000);
+    // cout<<"Display On"<<endl;
     // deserializeJson(ConfigPowerOn);
     // ScreenFunction(session); // Call the ScreenFunction to turn on the display
     // Sleep(3000);    
     // cout<<"Changing brightness"<<endl;
     // deserializeJson(gateConfig);
     // HandleBrightness(session); // Call the HandleBrightness function to update the brightness
-     cout<<"gantry in"<<endl;
-     deserializeJson(gantry_IN);
-     Display(session); // Call the Display function to update the display
-     Sleep(3000);
-    // cout<<"gate in"<<endl;
+    // cout<<"gantry in"<<endl;
     // deserializeJson(gate_IN);
+    // Display(session); // Call the Display function to update the display
+    // Sleep(3000);
+    // cout<<"gate in"<<endl;
+    // deserializeJson(gantry_IN);
     // Display(session); // Call the Display function to update the display
     // Sleep(3000);
     // cout<<"Get IP"<<endl;
@@ -846,7 +962,7 @@ int main() {
 
    
  
-    printf("Socket created and bound to %s : %d",SERVER_IP, SERVER_PORT);    
+    printf("Socket created and bound to %s : %d",mainIP.c_str(), SERVER_PORT);    
 
     string lastMessage;  // Store the last received message
    
@@ -856,7 +972,7 @@ int main() {
         int n = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)&client_addr, &addr_len);     
         if (n > 0){
             buffer[n] = '\0';  // Null-terminate the received string
-            cout<<"\nbuffer received: "<<buffer<<endl;
+            //cout<<"\nbuffer received: "<<buffer<<endl;
             
             // Check if the new message is different from the last one
             if (buffer != lastMessage) 
@@ -866,6 +982,8 @@ int main() {
 
                 if (deserializeJson(buffer) == 0) {
                     cout << "Failed to deserialize JSON" << endl;
+                    lastMessage = buffer;  // Update the last received message
+                    Sleep(500);  // Sleep for a short duration before retrying
                     continue;  // Skip this iteration if deserialization fails
                 }
 
@@ -888,17 +1006,20 @@ int main() {
                 }
                 lastMessage = buffer;  // Update the last received message
             }
-            Sleep(1000);
+            
         }
         else if (strlen(buffer) == 0) {
-            //printf("Buffer is empty (strlen == 0).\n");
+            printf("Buffer is empty (strlen == 0).\n");
+            Sleep(1000);  // Sleep for a short duration before retrying
             continue;  // Skip this iteration if the buffer is empty
         } else if (n == SOCKET_ERROR) {
             // Handle the error if needed
             int errorCode = WSAGetLastError();
-            printf("recvfrom failed with error code: %d\n", errorCode);
+            printf("recvfrom failed with error code: %d\n", errorCode); // (10035) is not an error - it's a normal condition for non-blocking sockets indicating no data is available.
+            Sleep(1000);  // Sleep for a short duration before retrying
             continue;  // Skip this iteration if recvfrom fails
         } else {
+            Sleep(500);  // Sleep for a short duration before retrying
             printf("No new message received.\n");
         }
     }

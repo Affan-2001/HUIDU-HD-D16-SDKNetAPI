@@ -200,7 +200,7 @@ string gantryResponseConfig = R"({
                                 })";
 
 
-#define SERVER_IP           "192.168.10.75" 
+#define SERVER_IP           "192.168.10.1" 
 #define SERVER_PORT         5005            // The port to listen on (must match server's port)
 
 #define Gate_IN_Greeting    "پی ایس او فیصل آباد ڈپو میں خوش آمدید"
