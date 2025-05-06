@@ -632,7 +632,7 @@ int deserializeJson(string json) {
     }
 
     // Check if the "ServertoDevice" object exists
-    if (!doc.containsKey("ServertoDevice")) {
+    if (!doc["ServertoDevice"].is<JsonObject>()) {
         cout << "Error: JSON missing 'ServertoDevice' object" << endl;
         return 0;
     }
@@ -640,19 +640,19 @@ int deserializeJson(string json) {
     JsonObject ServertoDevice = doc["ServertoDevice"];
     
     // Check if required fields exist in ServertoDevice
-    if (!ServertoDevice.containsKey("Type")) {
+    if (!ServertoDevice["Type"].is<const char*>()) {
         cout << "Error: JSON missing 'Type' field" << endl;
         return 0;
     }
     Type = ServertoDevice["Type"];
 
-    if (!ServertoDevice.containsKey("Device")) {
+    if (!ServertoDevice["Device"].is<const char*>()) {
         cout << "Error: JSON missing 'Device' field" << endl;
         return 0;
     }
     Device = ServertoDevice["Device"];
 
-    if (!ServertoDevice.containsKey("IP")) {
+    if (!ServertoDevice["IP"].is<const char*>()) {
         cout << "Error: JSON missing 'IP' field" << endl;
         return 0;
     }
@@ -663,14 +663,14 @@ int deserializeJson(string json) {
 
         Device_IP = ServertoDevice["IP"];
     
-    if (!ServertoDevice.containsKey("Port")) {
+    if (!ServertoDevice["Port"].is<int>()) {
         cout << "Error: JSON missing 'Port' field" << endl;
         return 0;
     }
     Device_Port = ServertoDevice["Port"];
 
     // Check if Data array exists
-    if (!ServertoDevice.containsKey("Data")) {
+    if (!ServertoDevice["Data"].is<JsonArray>()) {
         cout << "Error: JSON missing 'Data' array" << endl;
         return 0;
     }
