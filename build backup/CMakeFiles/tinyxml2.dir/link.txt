@@ -1,0 +1,2 @@
+C:\msys64\ucrt64\bin\ar.exe qc libtinyxml2.a CMakeFiles/tinyxml2.dir/src/HCatNet/Tool/tinyxml2.cpp.obj
+C:\msys64\ucrt64\bin\ranlib.exe libtinyxml2.a

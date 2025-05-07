@@ -4,6 +4,8 @@
 # Ignore the build directory
 build/
 Debug/
+*.o
+*.exe
 
 # Ignore IDE-specific files
 .vscode/

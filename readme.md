@@ -1,17 +1,21 @@
 # Dot Matrix LED Panel Communication SDK
 
-This project provides a C++ SDK for communicating with an HD-D16 Dot Matrix LED Panel over UDP. It includes utilities for networking, JSON, XML parsing, and more, and is designed for Windows environments.
+This project provides a C++ SDK for communicating with an HD-D16 Dot Matrix LED Panel over UDP. It includes functions to update the display text, color, size and font following the xml user manual, using this code the following commands can be sent to the end device:
+- GET DEVICE INFO 
+- GET IP INFO 
+- SET IP INFO 
+- POWER ON, POIWER OFF, REBOOT.
 
 ## Features
 
-- **UDP Communication**: Send and receive messages to/from the LED panel.
+- **UDP Communication**: creates a UDP socket to recieve commands which are then parsed. The connection with the led uses TCP.
 - **Event Core**: Thread-safe event-driven architecture for network sessions.
 - **Utilities**: Includes TinyXML2 for XML parsing, ArduinoJson for JSON, and MD5 hashing.
 - **Cross-Platform Codebase**: Primarily targets Windows, but uses portable C++ where possible.
 
 ## Getting Started
 
-### Prerequisites
+### Environment Setup
 
 - Windows OS
 - [CMake](https://cmake.org/) 3.12 or higher
@@ -23,24 +27,35 @@ This project provides a C++ SDK for communicating with an HD-D16 Dot Matrix LED 
 
 1. **Clone the repository**
    ```sh
-   git clone <your-repo-url>
+   git clone <https://github.com/Affan-2001/HUIDU-HD-D16-SDKNetAPI.git>
    cd SDKNetApi
    ```
 
 2. **Configure and build with CMake**
    ```sh
+   Add MSYS2 UCRT binaries to your system PATH:
+   $env:Path += ";C:\msys64\ucrt64\bin"
+
+#### METHOD 1 (MANUAL BUILDING)
    mkdir build
    cd build
-   cmake ..
+   cmake .. -G "MinGW Makefiles" -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe
    cmake --build .
+
+#### METHOD 2 (AUTOMATIC USING CMAKE EXTENSION IN VSCODE)
+  PRESS "CONTROL + SHIFT + P"
+  CMake: Configure
+  Select "MinGW Makefiles" as the generator 
+  Choose "GCC for MSYS2 UCRT64" as the compiler
+  CMake: Build
    ```
 
-   The executable will be placed in the `Debug` directory.
+   The executable will be placed in the `Debug` directory namely SDKNetApp.exe.
 
 ### Running
 
 - Edit `src/main.cpp` to set the correct `SERVER_IP` and `SERVER_PORT` for your network.
-- Run the built executable. It will listen for UDP messages and print received data.
+- Run the built executable. It will create a UDP socket to listen for messages.
 
 ## Project Structure
 

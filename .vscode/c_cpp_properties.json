@@ -10,11 +10,10 @@
                 "${workspaceFolder}/src\\HCatNet\\Net",
                 "${workspaceFolder}/src\\HCatEvent\\HCatNet",
                 "${workspaceFolder}/src"
-                
             ],
             "defines": [
                 "_DEBUG",
-                "UNICODE",  
+                "UNICODE",
                 "_UNICODE"
             ],
             "windowsSdkVersion": "10.0.22621.0",
