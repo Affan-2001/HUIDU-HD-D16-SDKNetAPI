@@ -1,3 +1,0 @@
-"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\SDKNetApp.dir/objects.a
-C:\msys64\ucrt64\bin\ar.exe qc CMakeFiles\SDKNetApp.dir/objects.a @CMakeFiles\SDKNetApp.dir\objects1.rsp
-C:\msys64\ucrt64\bin\g++.exe -g -Wl,--whole-archive CMakeFiles\SDKNetApp.dir/objects.a -Wl,--no-whole-archive -o "D:\Projects\Dot_matrix_led_panel\Communication_with_LED_Panel_HD-D16\SDK 3.0_TestVersion2\SDKNetApi\Debug\SDKNetApp.exe" -Wl,--out-implib,libSDKNetApp.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\SDKNetApp.dir\linkLibs.rsp
