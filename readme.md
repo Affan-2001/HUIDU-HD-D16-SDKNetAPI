@@ -13,6 +13,7 @@ This project provides a C++ SDK for communicating with an HD-D16 Dot Matrix LED 
 - **Utilities**: Includes TinyXML2 for XML parsing, ArduinoJson for JSON, and MD5 hashing.
 - **Cross-Platform Codebase**: Primarily targets Windows, but uses portable C++ where possible.
 
+
 ## Getting Started
 
 ### Environment Setup
@@ -39,7 +40,7 @@ This project provides a C++ SDK for communicating with an HD-D16 Dot Matrix LED 
 #### METHOD 1 (MANUAL BUILDING)
    mkdir build
    cd build
-   cmake .. -G "MinGW Makefiles" -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe
+   cmake .. -G "Unix Makefiles" -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe
    cmake --build .
 
 #### METHOD 2 (AUTOMATIC USING CMAKE EXTENSION IN VSCODE)
@@ -64,6 +65,7 @@ This project provides a C++ SDK for communicating with an HD-D16 Dot Matrix LED 
 - `src/HCatNet/Tool/` — Utility libraries (TinyXML2, ArduinoJson, MD5, etc.).
 - `include/` — Public headers.
 - `CMakeLists.txt` — Build configuration.
+- `external` — tinyxml library added as git submodule. So no need to download it externally. 
 
 ## Example JSON Command
 

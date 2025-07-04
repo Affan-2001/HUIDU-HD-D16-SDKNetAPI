@@ -12,24 +12,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Debug)
+# Add external library (TinyXML2)
+add_subdirectory(external/tinyxml2)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib64)
 
 # Add TinyXML2 source files
-set(TINYXML2_SOURCES 
-    ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool/tinyxml2.cpp
-)
-set(TINYXML2_HEADERS 
-    ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool/tinyxml2.h
-)
+# set(TINYXML2_SOURCES 
+#     ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool/tinyxml2.cpp
+# )
+# set(TINYXML2_HEADERS 
+#     ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool/tinyxml2.h
+# )
 
 # Create a library target for TinyXML2
-add_library(tinyxml2 STATIC ${TINYXML2_SOURCES} ${TINYXML2_HEADERS})
+# add_library(tinyxml2 STATIC ${TINYXML2_SOURCES} ${TINYXML2_HEADERS})
 
 # Set include directory for TinyXML2
-target_include_directories(tinyxml2 PUBLIC 
-    ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool
-)
+# target_include_directories(tinyxml2 PUBLIC 
+#     ${CMAKE_SOURCE_DIR}/src/HCatNet/Tool
+# )
 
 # Executable
 add_executable(SDKNetApp ${CMAKE_SOURCE_DIR}/src/main.cpp)
