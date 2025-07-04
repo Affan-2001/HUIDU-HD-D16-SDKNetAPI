@@ -1,18 +1,10 @@
-//#include <string>
 #include <iostream>
-// #include <thread>
 #include "ICApi.h"
 #include <winsock2.h>
 #include <ArduinoJson.h>
-#include "tinyxml2.h"
 #include <windows.h>
-//#include <fcntl.h>
 #include <vector>
 #include <algorithm> 
-
-#include <ws2tcpip.h>
-
-// #pragma comment(lib, "ws2_32.lib")
 
 using namespace std;
 using namespace ArduinoJson::V731HB42;
@@ -20,201 +12,23 @@ using namespace ArduinoJson::V731HB42;
 // Global event core pointer so we can call Quit from callbacks.
 static HEventCore *core = nullptr;
 
-const char* Type = nullptr;
-const char* Device = nullptr;
-const char* Device_IP = nullptr;
+std::string Type;
+std::string Device;
+std::string Device_IP;
 int Device_Port = 0;
 volatile bool g_shutdown = false;
 
-string Gate_TL[1]     = {""};
-string Gantry_TL[8]   = {"", "", "", "", "", "", "", ""};
-string brightnessData = "100";      // Default brightness value 
+string Gate_TL = "";
 
-const char* Name = nullptr;         // This is the variable that will be receiving the settings of what to do with the data received exmaple change the brioghtness or turn the display on or off
-const char* ScreenFunc= nullptr;    // This is the variable that will be receiving the settings of what to do with the data received exmaple change the brioghtness or turn the display on or off
-const char* IP2Set = nullptr;
-// string IPData = "";
+const char* Name = nullptr;
+const char* ScreenFunc= nullptr;
 std::vector<std::string> IPDB = {"192.168.10.61"};
 
 #define SERVER_IP           "192.168.10.80" 
 #define SERVER_PORT         5005            // The port to listen on (must match server's port)
 
-
-string gantry_IN =      R"({
-                            "ServertoDevice": {
-                                "Type": "Command",
-                                "Device": "Gantry In",
-                                "IP":"192.168.10.61",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Bay 1", "Value": "AVF-461" },
-                                { "Name": "Bay 2", "Value": "KRB-462" },
-                                { "Name": "Bay 3", "Value": "QCY-863" },
-                                { "Name": "Bay 4", "Value": "OAL-464" },
-                                { "Name": "Bay 5", "Value": "TL55465" },
-                                { "Name": "Bay 6", "Value": "TL65466" },
-                                { "Name": "Bay 7", "Value": "TL75467" },
-                                { "Name": "Bay 8", "Value": "TL85468" }
-                                ]
-                            }
-                        })";
-
-string gantry_OUT =      R"({
-                            "ServertoDevice": {
-                                "Type": "Command",
-                                "Device": "Gantry Out",
-                                "IP":"192.168.10.60",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Bay 1", "Value": "TL55461" },
-                                { "Name": "Bay 2", "Value": "TL65462" },
-                                { "Name": "Bay 3", "Value": "TL75463" },
-                                { "Name": "Bay 4", "Value": "TL85464" },
-                                { "Name": "Bay 5", "Value": "TL95465" },
-                                { "Name": "Bay 6", "Value": "TL05466" },
-                                { "Name": "Bay 7", "Value": "TL35467" },
-                                { "Name": "Bay 8", "Value": "TL45468" }
-                                ]
-                            }
-                        })";
-
-string gate_IN =        R"({
-                                "ServertoDevice": {
-                                    "Type": "Command",
-                                    "Device": "Gate In",
-                                    "IP":"192.168.10.61",
-                                    "Port":10001,
-                                    "Data": [
-                                    { "Name": "Data", "Value": "GXP-468" }
-                                    ]
-                                }
-                        })";
-
-string gate_OUT =       R"({
-                            "ServertoDevice": {
-                                "Type": "Command",
-                                "Device": "Gate Out",
-                                "IP":"192.168.10.61",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Data", "Value": "AXY-683" }
-                                ]
-                            }
-                        })";
-                            
-string gateConfig  =    R"({
-                            "ServertoDevice": {
-                                "Type": "Configuration",
-                                "Device": "Gate In",
-                                "IP":"192.168.10.60",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Brightness", "Value": "100" }
-                                ]
-                            }
-                        })";
-
-string gateConfig1 =    R"({
-                            "ServertoDevice": {
-                                "Type": "Configuration",
-                                "Device": "Gate Out",
-                                "IP":"192.168.10.60",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Brightness", "Value": "10" }
-                                ]
-                            }
-                        })";
-                        
-string ConfigReboot =    R"({
-                            "ServertoDevice": {
-                                "Type": "Configuration",
-                                "Device": "Gate Out",
-                                "IP":"192.168.10.60",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Reboot", "Value": "Reboot" }
-                                ]
-                            }
-                        })";
-
-string ConfigPowerOn =    R"({
-                            "ServertoDevice": {
-                                "Type": "Configuration",
-                                "Device": "Gate Out",
-                                "IP":"192.168.10.60",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Screen", "Value": "OpenScreen" }
-                                ]
-                            }
-                        })";
-
-string ConfigPowerOff = R"({
-                            "ServertoDevice": {
-                                "Type": "Configuration",
-                                "Device": "Gate Out",
-                                "IP":"192.168.10.60",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Screen", "Value": "CloseScreen" }
-                                ]
-                            }
-                        })";
-
-
-string SetIPCommand = R"({
-                    "ServertoDevice": {
-                        "Type": "Configuration",
-                        "Device": "Gate Out",
-                        "IP":"192.168.10.60",
-                        "Port":10001,
-                        "Data": [
-                        { "Name": "SetIP", "Value": "192.168.10.61" }
-                        ]
-                    }
-                })";
-
-string GetIPCommand = R"({
-                    "ServertoDevice": {
-                        "Type": "Configuration",
-                        "Device": "Gate Out",
-                        "IP":"192.168.10.60",
-                        "Port":10001,
-                        "Data": [
-                        { "Name": "GetIP", "Value": "" }
-                        ]
-                    }
-                })";
-            
-string gantryResponseCommand = R"({
-                                "DevicetoServer": {
-                                    "Type": "Response",
-                                    "Device": "Gantry In",
-                                    "Data": [
-                                    { "Name": "Commnad", "Value": "OK/Failed" }
-                                    ]
-                                }
-                                })";
-
-string gantryResponseConfig = R"({
-                                "DevicetoServer": {
-                                    "Type": "Response",
-                                    "Device": "Gantry In",
-                                    "Data": [
-                                    { "Name": "Configuration", "Value": "OK/Failed" }
-                                    ]
-                                }
-                                })";
-
-
-
-
-#define Gate_IN_Greeting    "پی ایس او فیصل آباد ڈپو میں خوش آمدید"
-#define Gate_OUT_Greeting    "پی ایس او فیصل آباد ڈپو خدا حافظ"
-//#define Gate_OUT_Greeting   "پی ایس او فیصل آباد ڈپومیں آمد کا شکریہ"
-//#define Gate_IN_Greeting    "Welcome to PSO Faisalabad Depot"
-//#define Gate_OUT_Greeting   "Thank you for Visiting PSO Faisalabad Depot"
+#define Gate_IN_Greeting    "پی ایس او فیصل آباد ٹرمینل میں خوش آمدید"
+#define Gate_OUT_Greeting    "پی ایس او فیصل آباد ٹرمینل خدا حافظ"
 
 #define XML_Gate            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" \
                             "<sdk guid=\"b04f672504da67f19d48edb3b173c15f\">\n" \
@@ -228,7 +42,7 @@ string gantryResponseConfig = R"({
                             "            <text guid=\"766942a6-5b3f-46e0-ac44-6560c3259063\" name=\"\" singleLine=\"false\">\n" \
                             "              <style align=\"center\"/>\n" \
                             "              <string>%s</string>\n" \
-                            "              <font name=\"Arial\" size=\"24\" color=\"#00b8c7\" bold=\"true\" italic=\"false\" underline=\"false\" />\n" \
+                            "              <font name=\"Arial\" size=\"22\" color=\"#ff0000\" bold=\"true\" italic=\"false\" underline=\"false\" />\n" \
                             "              <effect in=\"0\" inSpeed=\"4\" out=\"20\" outSpeed=\"4\" duration=\"0\" />\n" \
                             "            </text>\n" \
                             "          </resources>\n" \
@@ -238,7 +52,7 @@ string gantryResponseConfig = R"({
                             "          <resources>\n" \
                             "            <text singleLine=\"true\">\n" \
                             "              <style align=\"center\" />\n" \
-                            "              <font name=\"Arial\" size=\"55\" color=\"#00b8c7\" bold=\"true\" italic=\"false\" underline=\"false\" />\n" \
+                            "              <font name=\"Arial\" size=\"48\" color=\"#ff0000\" bold=\"true\" italic=\"false\" underline=\"false\" />\n" \
                             "              <effect duration=\"100\" in=\"0\" inSpeed=\"4\" outSpeed=\"4\" out=\"20\"/>\n" \
                             "              <string>%s</string>\n" \
                             "            </text>\n" \
@@ -247,141 +61,13 @@ string gantryResponseConfig = R"({
                             "      </program>\n" \
                             "    </screen>\n" \
                             "  </in>\n" \
-                            "</sdk>"   
-
-#define XML_Gantry          "<?xml version='1.0' encoding='utf-8'?>\n" \
-                            "<sdk guid=\"##GUID\">\n" \
-                            "    <in method=\"AddProgram\">\n" \
-                            "        <screen timeStamps=\"12311454\">\n" \
-                            "            <program guid=\"{41d60f81-f3d5-4357-94fe-8bbaf158d06c}\">\n" \
-                            "                <playControl count=\"1\"/>\n" \
-                            "                <area alpha=\"255\" guid=\"areaclockGuid1\">\n" \
-                            "                    <rectangle x=\"0\" y=\"0\" width=\"256\" height=\"35\" />\n" \
-                            "                    <resources>\n" \
-                            "                        <text singleLine=\"true\">\n" \
-                            "                            <font bold=\"true\" size=\"30\" color=\"#00b8c7\" />\n" \
-                            "                            <effect duration=\"100\" in=\"0\" inSpeed=\"4\" outSpeed=\"4\" out=\"20\"/>\n" \
-                            "                            <style align=\"left\"/>\n" \
-                            "                            <string> Bay1 %s</string>\n" \
-                            "                        </text>\n" \
-                            "                    </resources>\n" \
-                            "                </area>\n" \
-                            "                <area alpha=\"255\" guid=\"areaclockGuid2\">\n" \
-                            "                    <rectangle x=\"0\" y=\"30\" width=\"256\" height=\"35\" />\n" \
-                            "                    <resources>\n" \
-                            "                        <text singleLine=\"true\">\n" \
-                            "                            <font bold=\"true\" size=\"30\" color=\"#00b8c7\" />\n" \
-                            "                            <effect duration=\"100\" in=\"0\" inSpeed=\"4\" outSpeed=\"4\" out=\"20\"/>\n" \
-                            "                            <style align=\"left\"/>\n" \
-                            "                            <string> Bay2 %s</string>\n" \
-                            "                        </text>\n" \
-                            "                    </resources>\n" \
-                            "                </area>\n" \
-                            "                <area alpha=\"255\" guid=\"areaclockGuid3\">\n" \
-                            "                    <rectangle x=\"0\" y=\"60\" width=\"256\" height=\"35\" />\n" \
-                            "                    <resources>\n" \
-                            "                        <text singleLine=\"true\">\n" \
-                            "                            <font bold=\"true\" size=\"30\" color=\"#00b8c7\" />\n" \
-                            "                            <effect duration=\"100\" in=\"0\" inSpeed=\"4\" outSpeed=\"4\" out=\"20\"/>\n" \
-                            "                            <style align=\"left\"/>\n" \
-                            "                            <string> Bay3 %s</string>\n" \
-                            "                        </text>\n" \
-                            "                    </resources>\n" \
-                            "                </area>\n" \
-                            "                <area alpha=\"255\" guid=\"areaclockGuid4\">\n" \
-                            "                    <rectangle x=\"0\" y=\"90\" width=\"256\" height=\"35\" />\n" \
-                            "                    <resources>\n" \
-                            "                        <text singleLine=\"true\">\n" \
-                            "                            <font bold=\"true\" size=\"30\" color=\"#00b8c7\" />\n" \
-                            "                            <effect duration=\"100\" in=\"0\" inSpeed=\"4\" outSpeed=\"4\" out=\"20\"/>\n" \
-                            "                            <style align=\"left\"/>\n" \
-                            "                            <string> Bay4 %s</string>\n" \
-                            "                        </text>\n" \
-                            "                    </resources>\n" \
-                            "                </area>\n" \
-                            "            </program>\n" \
-                            "        </screen>\n" \
-                            "    </in>\n" \
                             "</sdk>"
-
-#define brightnessXML       "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" \
-                            "<sdk guid=\"\">\n" \
-                            "  <in method=\"SetLuminancePloy\">\n" \
-                            "    <mode value=\"default\" />\n" \
-                            "    <default value=\"%s\" />\n" \
-                            "    <ploy />\n" \
-                            "    <sensor min=\"1\" max=\"100\" time=\"5\" />\n" \
-                            "  </in>\n" \
-                            "</sdk>"
-                        
-#define GETDEVICEINFO_TEXT  "<?xml version=\'1.0\' encoding=\'utf-8\'?>\n" \
-                            "<sdk guid=\"##GUID\">\n"                      \
-                            "    <in method=\"GetDeviceInfo\"/>\n"         \
-                            "</sdk>"
-
-#define XML_SCREEN          "<?xml version='1.0' encoding='utf-8'?>\n" \
-                            "<sdk guid=\"##GUID\">\n"                   \
-                            "    <in method=\"%s\"/>\n"        \
-                            "</sdk>"
-  
-#define GET_ETH0_INFO_XML  "<?xml version='1.0' encoding='utf-8'?>\n" \
-                            "<sdk guid=\"##GUID\">\n" \
-                            "    <in method=\"GetEth0Info\"/>\n" \
-                            "</sdk>"
-
-#define SET_ETH0_XML    "<?xml version='1.0' encoding='utf-8'?>\n" \
-                            "<sdk guid=\"##GUID\">\n" \
-                            "    <in method=\"SetEth0Info\">\n" \
-                            "        <eth valid=\"true\">\n" \
-                            "            <enable value=\"true\"/>\n" \
-                            "            <dhcp auto=\"false\"/>\n" \
-                            "            <address ip=\"%s\" netmask=\"255.255.255.0\" gateway=\"192.168.10.1\" dns=\"192.168.10.1\"/>\n" \
-                            "        </eth>\n" \
-                            "    </in>\n" \
-                            "</sdk>"
-
-#define GET_DEVICE_INFO     "<?xml version='1.0' encoding='utf-8'?>\n" \
-                            "<sdk guid=\"##GUID\">\n" \
-                            "    <in method=\"GetDeviceName\"/>\n" \
-                            "    <in method=\"GetFirewareVersion\"/>\n" \
-                            "    <in method=\"GetKeyDefine\"/>\n" \
-                            "    <in method=\"GetPlayStatus\"/>\n" \
-                            "    <in method=\"GetSystemVolume\"/>\n" \
-                            "    <in method=\"GetBootLogo\"/>\n" \
-                            "    <in method=\"GetSensorInfo\"/>\n" \
-                            "    <in method=\"GetGPSInfo\"/>\n" \
-                            "    <in method=\"GetCurrentLuminance\"/>\n" \
-                            "    <in method=\"GetCurrentTemperature\"/>\n" \
-                            "    <in method=\"GetCurrentHumity\"/>\n" \
-                            "    <in method=\"GetSensorType\"/>\n" \
-                            "    <in method=\"GetSwitchTime\"/>\n" \
-                            "    <in method=\"GetTimeInfo\"/>\n" \
-                            "    <in method=\"GetLuminancePloy\"/>\n" \
-                            "    <in method=\"GetScreenInfo\"/>\n" \
-                            "    <in method=\"GetLicense\"/>\n" \
-                            "    <in method=\"GetEth0Info\">\n" \
-                            "        <eth valid=\"true\">\n" \
-                            "            <enable value=\"true\"/>\n" \
-                            "            <dhcp auto=\"false\"/>\n" \
-                            "            <address ip=\"192.168.1.100\" netmask=\"255.255.255.0\" gateway=\"192.168.1.1\" dns=\"192.168.1.1\"/>\n" \
-                            "        </eth>\n" \
-                            "    </in>\n" \
-                            "    <in method=\"GetWifiInfo\"/>\n" \
-                            "    <in method=\"GetPppoeInfo\"/>\n" \
-                            "    <in method=\"GetDeviceInfo\"/>\n" \
-                            "    <in method=\"GetRelay\"/>\n" \
-                            "    <in method=\"GetAdminModeInfo\"/>\n" \
-                            "</sdk>";
-
-
 
 // Callback function to handle received data
 static void ReadData(HSession *currSession, const char *data, huint32 len, void *userData) {
     printf("--------------Read Data:--------------\n");   
     printf("  currSession: %p,\t userData: %p,\t len: %u\n", (void*)currSession, userData, (unsigned int)len);
     printf("  data:        %s\n", data);
-    //IPData = data; // Store the received data in the global variable
-    //cout<<"IPData: "<<IPData<<endl;
     printf("-------------------------------------\n");
     Quit(core);
 }
@@ -395,14 +81,13 @@ static void DebugLog(HSession *currSession, const char *log, huint32 len, void *
     fflush(stdout);
 }
 
-
 // Callback function to handle connection status
 static void NetStatus(HSession *currSession, eNetStatus status, void *userData) {
     printf("--------------NetStatus:--------------\n");
     printf("  currSession: %p,\t userData: %p\n", (void*)currSession, userData);
     printf("  NetStatus:   %d\n", status); 
     printf("-------------------------------------\n");
-
+    
     switch (status) {
     case kConnect:
         printf("NetStatus : Device Connected\n");
@@ -416,6 +101,26 @@ static void NetStatus(HSession *currSession, eNetStatus status, void *userData) 
     fflush(stdout);
 }
 
+// Callback function to handle detected device information
+// static void DeviceInfo(HSession *currSession, const char *id, huint32 idLen, const char *ip, huint32 ipLen, const char *readData, huint32 dataLen, void *userData) {
+//     printf("id[%s], ip[%s]\n", id, ip);  // Print device ID and IP address
+// }
+
+/*
+static void DeviceInfo(HSession *currSession, const char *id, huint32 idLen, const char *ip, huint32 ipLen, const char *readData, huint32 dataLen, void *userData) {
+    printf("--------------DeviceInfo:--------------\n");
+    printf("  currSession: %p\n", (void*)currSession);
+    printf("  id:          %.*s\n", (int)idLen, id);
+    printf("  idLen:       %u\n", (unsigned int)idLen);
+    printf("  ip:          %.*s\n", (int)ipLen, ip);
+    printf("  ipLen:       %u\n", (unsigned int)ipLen);
+    printf("  readData:    %.*s\n", (int)dataLen, readData);
+    printf("  dataLen:     %u\n", (unsigned int)dataLen);
+    printf("  userData:    %p\n", userData);
+    printf("-------------------------------------\n");
+}
+*/
+
 // Graceful shutdown function when Ctrl+C is pressed  or window is closed
 BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
     if (dwCtrlType == CTRL_C_EVENT || dwCtrlType == CTRL_CLOSE_EVENT) {
@@ -425,42 +130,29 @@ BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
     return FALSE;  // Let other handlers process this event
 }
 
-
-
 // Function to upload the text to the display
 void Display(HSession* session) {
     char finalXml[4096];
     const char* xmlTemplate = nullptr;
     
-    if (strcmp(Device, "Gate In") == 0)
+    if (Device == "Gate In")
     {
         xmlTemplate = XML_Gate; //Macro to define the XML template
-        snprintf(finalXml, sizeof(finalXml), xmlTemplate, Gate_IN_Greeting, Gate_TL[0].c_str()); // Construct the XML command
+        snprintf(finalXml, sizeof(finalXml), xmlTemplate, Gate_IN_Greeting, Gate_TL.c_str()); // Construct the XML command
     }
-    else if (strcmp(Device, "Gate Out") == 0)
+    else if (Device == "Gate Out")
     {
         xmlTemplate = XML_Gate; //Macro to define the XML template
-        snprintf(finalXml, sizeof(finalXml), xmlTemplate, Gate_OUT_Greeting, Gate_TL[0].c_str()); // Construct the XML command  
-    }
-    else if (strcmp(Device, "Gantry In") == 0)
-    {
-        xmlTemplate = XML_Gantry;
-        snprintf(finalXml, sizeof(finalXml), xmlTemplate, Gantry_TL[0].c_str(),Gantry_TL[1].c_str(),Gantry_TL[2].c_str(),Gantry_TL[3].c_str()); // Construct the XML command  
-    }
-    else if (strcmp(Device, "Gantry Out") == 0)
-    {
-        xmlTemplate = XML_Gantry;
-        snprintf(finalXml, sizeof(finalXml), xmlTemplate, Gantry_TL[0].c_str(),Gantry_TL[1].c_str(),Gantry_TL[2].c_str(),Gantry_TL[3].c_str()); // Construct the XML command  
+        snprintf(finalXml, sizeof(finalXml), xmlTemplate, Gate_OUT_Greeting, Gate_TL.c_str()); // Construct the XML command  
     }
     else {
         printf("Unknown Device Type\n");
         return;
     }
     
-    if (Connect(session, Device_IP, Device_Port)) {        
-        if (SendSDK(session, finalXml, strlen(finalXml))) {
-            
-            cout<<finalXml<<endl;
+    if (Connect(session, Device_IP.c_str(), Device_Port)) {        
+        if (SendSDK(session, finalXml, strlen(finalXml))) {            
+            // cout<<finalXml<<endl;
             printf("Text Updated Successfully.\n");
         } else {
             printf("Failed to update display.\n");
@@ -471,125 +163,9 @@ void Display(HSession* session) {
     Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
 }
 
-// void HandleBrightness(HSession* session) {
-//     char finalXml[310] = ""; // Ensure it's large enough
-
-//     const char* xmlTemplate = brightnessXML; // Macro to define the XML template
-//     snprintf(finalXml, sizeof(finalXml), xmlTemplate, brightnessData.c_str()); // Construct the XML command
-//     // Construct the brightness XML command.
-//     if (Connect(session, Device_IP, Device_Port)) {
-//         // Send the XML command over the session
-//         if (SendSDK(session, finalXml, strlen(finalXml))) {
-//             printf("Brightness Updated Successfully.\n");
-//         } else {
-//             printf("Failed to update brightness.\n");
-//         }
-//     } else {
-//         printf("Connection to the device failed.\n");
-//     }
-//     Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
-// }
-
-void ScreenFunction(HSession* session){
-    cout<<"the screen function to: "<<ScreenFunc<<endl;
-    char finalXml[310] = "";                                                // Ensure it's large enough
-    const char* xmlTemplate = XML_SCREEN;                                   // Macro to define the XML template
-    snprintf(finalXml, sizeof(finalXml), xmlTemplate,ScreenFunc);           // Construct the XML command
-    //cout<<"Final XML is: "<<finalXml<<endl;
-    if (Connect(session, Device_IP, Device_Port)) {
-
-        // Send the XML command over the session
-        if (SendSDK(session, finalXml, strlen(finalXml))) {
-            printf("Screen command sent to the display.\n");
-        } else {
-            printf("Failed to send command.\n");
-        }
-    } else {
-        printf("Connection to the device failed.\n");
-    }
-    Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
-}
-
-void GetIP(HSession* session) {
-    char finalXml[500] = ""; // Ensure it's large enough
-    const char* xmlTemplate = GET_ETH0_INFO_XML; // Macro to define the XML template
-    //snprintf(finalXml, sizeof(finalXml), xmlTemplate); // Construct the XML command
-    snprintf(finalXml, sizeof(finalXml), xmlTemplate); // Construct the XML command
-    if (Connect(session, Device_IP, Device_Port)) {
-        // Send the XML command over the session
-        if (SendSDK(session, finalXml, strlen(finalXml))) {
-            cout<<finalXml<<endl;
-            printf("Got Eth Info Successfully.\n");
-         // Call the function to read and process the IP data
-        } else {
-            printf("Failed to get Eth Info.\n");
-        }
-    } else {
-        printf("Connection to the device failed.\n");
-    }
-    Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
-}
-
-// void ReadIPData() {
-//     cout<<"IPData is: "<<IPData<<endl;
-//     if (IPData == "") {
-//         std::cout << "No IP data received!" << std::endl;
-  
-//     }else{
-//         tinyxml2::XMLDocument doc;
-//         doc.Parse(IPData.c_str());
-
-//         tinyxml2::XMLElement* ethElement = doc.FirstChildElement("sdk")->FirstChildElement("out")->FirstChildElement("eth");
-//         if (ethElement) {
-//             const char* ip = ethElement->FirstChildElement("address")->Attribute("ip");
-//             if (ip) {
-//                 std::cout << "Extracted IP: " << ip << std::endl;
-//             } else {
-//                 std::cout << "IP address not found!" << std::endl;
-//             }
-//         }
-//         IPData = ""; // Reset IPData to nullptr after processing
-//     }
-// } 
-
-void SetIP(HSession* session) {
-    char finalXml[500] = ""; // Ensure it's large enough
-    const char* xmlTemplate = SET_ETH0_XML;
-    snprintf(finalXml, sizeof(finalXml), xmlTemplate, IP2Set);
-    // Construct the brightness XML command.
-    cout<<"IP changing XML is: "<<finalXml<<endl;
-    if (Connect(session, Device_IP, Device_Port)) {
-        // Send the XML command over the session
-        if (SendSDK(session, finalXml, strlen(finalXml))) {
-            printf("IP Updated Successfully to: %s\n ", IP2Set);
-        } else {
-            printf("Failed to update IP Address the current IP address is %s.\n", Device_IP);
-        }
-    } else {
-        printf("Connection to the device failed.\n");
-    }
-    Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
-}
-
-void GetDeviceInfo(HSession* session ){
-    const char* xmlTemplate = GET_DEVICE_INFO;
-    cout<<"Retreiving firmware device info,"<<endl;
-    if (Connect(session, Device_IP, Device_Port)) {
-        // Send the XML command over the session
-        if (SendSDK(session, xmlTemplate, strlen(xmlTemplate))) {
-            printf("Command sent for retreiving device info sent");
-        } else {
-            printf("Failed to send command");
-        }
-    } else {
-        printf("Connection to the device failed.\n");
-    }
-    Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
-}
-
 int deserializeJson(string json) {
     int i = 0;
-    JsonDocument doc;
+    StaticJsonDocument<256> doc;
 
     // Attempt to parse the JSON string
     DeserializationError error = deserializeJson(doc, json);
@@ -597,98 +173,35 @@ int deserializeJson(string json) {
         cout << "deserializeJson() failed: " << error.c_str() << endl;
         return 0;
     }
-
-    // Check if the "ServertoDevice" object exists
-    if (!doc["ServertoDevice"].is<JsonObject>()) {
-        cout << "Error: JSON missing 'ServertoDevice' object" << endl;
-        return 0;
-    }
-
-    JsonObject ServertoDevice = doc["ServertoDevice"];
     
-    // Check if required fields exist in ServertoDevice
-    if (!ServertoDevice["Type"].is<const char*>()) {
-        cout << "Error: JSON missing 'Type' field" << endl;
-        return 0;
-    }
-    Type = ServertoDevice["Type"];
+    JsonObject ServertoDevice = doc["ServertoDevice"];
 
-    if (!ServertoDevice["Device"].is<const char*>()) {
-        cout << "Error: JSON missing 'Device' field" << endl;
-        return 0;
-    }
-    Device = ServertoDevice["Device"];
+    Type = ServertoDevice["Type"].as<std::string>();
+    Device = ServertoDevice["Device"].as<std::string>();
+    Device_IP = ServertoDevice["IP"].as<std::string>();
+    Device_Port = ServertoDevice["Port"];
 
-    if (!ServertoDevice["IP"].is<const char*>()) {
-        cout << "Error: JSON missing 'IP' field" << endl;
-        return 0;
-    }
-    if (std::find(IPDB.begin(), IPDB.end(), ServertoDevice["IP"]) == IPDB.end()){
+    if (std::find(IPDB.begin(), IPDB.end(), Device_IP) == IPDB.end()) {
         std::cout << "IP not found in the array!" << std::endl;
         return 0;
     }
-
-        Device_IP = ServertoDevice["IP"];
     
-    if (!ServertoDevice["Port"].is<int>()) {
-        cout << "Error: JSON missing 'Port' field" << endl;
-        return 0;
-    }
-    Device_Port = ServertoDevice["Port"];
-
-    // Check if Data array exists
-    if (!ServertoDevice["Data"].is<JsonArray>()) {
-        cout << "Error: JSON missing 'Data' array" << endl;
-        return 0;
-    }
-
     JsonArray dataArray = ServertoDevice["Data"].as<JsonArray>();  // Store the temporary in a variable
     for (JsonObject data : dataArray) // Iterate over the array of objects
     {
         Name = data["Name"];        // "Bay 1", ...   in the case of when configuration is received it will store brightness/power on/ power off.
         const char* Value = data["Value"];
-
+        
         // Validate: check if Value exists or is null
         if (Value == nullptr || data["Value"].isNull()) {
             printf("Warning: 'Value' for item at index: %d is null; replacing with 0 \n",i);
             Value = "0"; // Set Value to an empty string if null
         }
-
-        if ((strcmp(Type, "Command") == 0) && ((strcmp(Device, "Gantry In") == 0) || (strcmp(Device, "Gantry Out") == 0))) 
-        {
-            Gantry_TL[i] = Value;
-        } 
-    
-        else if ((strcmp(Type, "Command") == 0) && ((strcmp(Device, "Gate In") == 0) || (strcmp(Device, "Gate Out") == 0))) 
-        {
-            Gate_TL[i] = Value;
-        } 
-        else if ((strcmp(Type, "Configuration") == 0) && (strcmp(Name, "Brightness") == 0)) 
-        {
-            brightnessData = Value; // Update the brightnessData variable with the new value
-        }
-        else if ((strcmp(Type, "Configuration") == 0) && ((strcmp(Name, "Screen") == 0) || (strcmp(Name, "Reboot") == 0))) {
-            ScreenFunc = Value; // This will load the value of the screen function to be used in the screen function.
-        } 
-        else if ((strcmp(Type, "Configuration") == 0) && (strcmp(Name, "GetIP") == 0)){
-
-            continue;
-        }        
-        else if ((strcmp(Type, "Configuration") == 0) && (strcmp(Name, "SetIP") == 0)){
-            IP2Set = Value;            
-        } 
-        else if ((strcmp(Type, "Configuration") == 0) && (strcmp(Name, "GetFirmwareInfo") == 0)){
-            continue;
-        
-        }else{
-            cout<<"Unknown command received..."<<endl;
-            continue; // Skip this iteration if the name is not recognized
-        }
-        i++;
-    }       
+    Gate_TL = Value;
+      
+    }
     return 1;
 }
-
 
 void cleanup_resources(SOCKET sock, HSession* session) {
     // Check if socket is valid before closing
@@ -713,27 +226,21 @@ void cleanup_resources(SOCKET sock, HSession* session) {
     printf("Resources cleaned up successfully\n");
 }
 
-
-
-
 int main() {    
-
-    // Set up console handler
-    if (!SetConsoleCtrlHandler(ConsoleHandler, TRUE)) {
-        cerr << "Failed to set control handler!" << endl;
-        return -1;
-    }
-
     WSADATA wsaData;
     SOCKET sock;
     struct sockaddr_in server_addr, client_addr;
     char buffer[2048];
     int addr_len = sizeof(client_addr);
-
-     // Get and display the main IP address
-     std::string mainIP = SERVER_IP;
-    //  std::cout << "\nMain IP address: " << (mainIP.empty() ? "Not found" : mainIP) << std::endl;
-
+    DWORD lastExecTime = GetTickCount(); // Initialize timer
+    const DWORD intervalMs = 5000;
+    
+    // Set up console handler
+    if (!SetConsoleCtrlHandler(ConsoleHandler, TRUE)) {
+        cerr << "Failed to set control handler!" << endl;
+        return -1;
+    }
+    
     // Create the event core.
     core = CreateEventCore();
     if (!core) {
@@ -741,6 +248,7 @@ int main() {
         cleanup_resources(INVALID_SOCKET, nullptr);  // No resources allocated yet
         return -1;
     }
+
     // Create a network session using the SDK2 protocol.
     HSession *session = CreateNetSession(core, kSDK2);
     if (!session) {
@@ -748,15 +256,14 @@ int main() {
         cleanup_resources(INVALID_SOCKET, nullptr);  // Core created but no session
         return -1;
     }
-
+    
     // Set the callbacks.
     SetNetSession(session, kReadyReadFunc, reinterpret_cast<void *>(ReadData));
     SetNetSession(session, kReadyReadUserData, session);
     SetNetSession(session, kNetStatusFunc, reinterpret_cast<void *>(NetStatus));
     SetNetSession(session, kNetStatusUserData, session);
     SetNetSession(session, kDebugLogFunc, reinterpret_cast<void *>(DebugLog));
-
-
+    
     // Initialize Winsock
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) 
     {
@@ -773,20 +280,21 @@ int main() {
         cleanup_resources(INVALID_SOCKET, session);  // Winsock initialized but no socket
         return -1;
     }
-
-     // Set socket to non-blocking mode
-     u_long mode = 1;  // 1 = non-blocking, 0 = blocking
-     if (ioctlsocket(sock, FIONBIO, &mode) != 0) {
-         std::cerr << "Failed to set non-blocking mode: " << WSAGetLastError() << std::endl;
-         cleanup_resources(INVALID_SOCKET, session);
-         return -1;
-     }      
+    
+    // Set socket to non-blocking mode
+    u_long mode = 1;  // 1 = non-blocking, 0 = blocking
+    if (ioctlsocket(sock, FIONBIO, &mode) != 0) {
+        std::cerr << "Failed to set non-blocking mode: " << WSAGetLastError() << std::endl;
+        cleanup_resources(INVALID_SOCKET, session);
+        return -1;
+    }
+    
     // Set up the server address structure (bind to any available IP address)
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);  // The port to listen on
-    server_addr.sin_addr.s_addr = inet_addr(mainIP.c_str());  // 0.0.0.0 listens on all available network interfaces
-
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);  // 0.0.0.0 listens on all available network interfaces
+    
     // Bind the socket to the specified IP address and port
     if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) 
     {
@@ -795,71 +303,57 @@ int main() {
         cleanup_resources(sock, session);  // All resources created
         return -1;
     }
- 
-    printf("Socket created and bound to %s : %d \n",mainIP.c_str(), SERVER_PORT);    
-
-    string lastMessage;  // Store the last received message
-   
-    while (!g_shutdown) 
-    {   
+    printf("Socket created and bound to %s : %d \n",SERVER_IP, SERVER_PORT);
     
+    string lastMessage;  // Store the last received message
+    while (!g_shutdown) 
+    {    
         int n = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)&client_addr, &addr_len);     
         if (n > 0){
             buffer[n] = '\0';  // Null-terminate the received string
-            //cout<<"\nbuffer received: "<<buffer<<endl;
-            
+            //printf("\nReceived new message: %s\n", buffer);                  
             // Check if the new message is different from the last one
             if (buffer != lastMessage) 
             {
-                printf("\nReceived new message:%s \n", buffer);      
-                deserializeJson(buffer);
-
+                printf("\nReceived new message:%s \n", buffer);
                 if (deserializeJson(buffer) == 0) {
-                    cout << "Failed to deserialize JSON" << endl;
+                    printf("Failed to deserialize JSON \n");
                     lastMessage = buffer;  // Update the last received message
                     Sleep(500);  // Sleep for a short duration before retrying
                     continue;  // Skip this iteration if deserialization fails
                 }
-
-                if (strcmp(Type, "Command") == 0) {
+                
+                if (Type == "Command") {
                     Display(session); // Call the Display function to update the display
-                // } else if (strcmp(Type, "Configuration") == 0){
-                    // if (strcmp(Name, "Brightness") == 0) {
-                    //     HandleBrightness(session); // Call the HandleBrightness function to update the brightness
-                    // } else if((strcmp(ScreenFunc, "Reboot") == 0) || (strcmp(ScreenFunc, "Screen") == 0)) {
-                    //     ScreenFunction(session); // Call the HandlePowerSettings function to update the Power Settings
-                    // // } else if (strcmp(Name, "GetIP") == 0){
-                    //     GetIP(session);
-                    //     ReadIPData(); // Call the getEth0Info function to get the IP info
-                        // SetNetSession(session, kReadyReadUserData,reinterpret_cast<void *>(ReadIPData));
-                    // } else if (strcmp(Name, "SetIP") == 0){
-                    //     SetIP(session);
-                    // } else if (strcmp(Name, "GetFirmwareInfo") == 0){
-                    //     GetDeviceInfo(session);
-                    }
                 }
                 lastMessage = buffer;  // Update the last received message
             }
-            
-        //}
-        else if (strlen(buffer) == 0) {
-            printf("Buffer is empty (strlen == 0).\n");
-            Sleep(1000);  // Sleep for a short duration before retrying
-            continue;  // Skip this iteration if the buffer is empty
-        } else if (n == SOCKET_ERROR) {
-            // Handle the error if needed
+         // Skip this iteration if the buffer is empty
+        }
+        else if (n == SOCKET_ERROR) {
             int errorCode = WSAGetLastError();
-            printf("recvfrom failed with error code: %d\n", errorCode); // (10035) is not an error - it's a normal condition for non-blocking sockets indicating no data is available.
-            Sleep(1000);  // Sleep for a short duration before retrying
-            continue;  // Skip this iteration if recvfrom fails
+            if (errorCode == WSAEWOULDBLOCK) {
+                // No data available, continue polling
+                //Sleep(10);  // Small sleep to prevent CPU overuse (optional, see Option 2 for better approach)
+                continue;
+            } else {
+                // Handle actual errors
+                printf("recvfrom failed with error code: %d\n", errorCode);
+                Sleep(1000);  // Sleep for a short duration before retrying
+                continue;
+            }
         } else {
             Sleep(500);  // Sleep for a short duration before retrying
             printf("No new message received.\n");
         }
+       // --- Timer logic to call Exec(core) every intervalMs milliseconds ---
+        DWORD now = GetTickCount();
+        if (now - lastExecTime >= intervalMs) {
+            Quit(core); // Call your SDK event loop
+            lastExecTime = now;
+        }
     }
-    
-    cout<<"\nExiting the loop"<<endl;
+    printf("Exiting the loop \n");
     cleanup_resources(sock, session);
-
     return 0;
 }
