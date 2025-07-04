@@ -33,10 +33,10 @@ string brightnessData = "100";      // Default brightness value
 const char* Name = nullptr;         // This is the variable that will be receiving the settings of what to do with the data received exmaple change the brioghtness or turn the display on or off
 const char* ScreenFunc= nullptr;    // This is the variable that will be receiving the settings of what to do with the data received exmaple change the brioghtness or turn the display on or off
 const char* IP2Set = nullptr;
-string IPData = "";
-std::vector<std::string> IPDB = {"192.168.10.60"};
+// string IPData = "";
+std::vector<std::string> IPDB = {"192.168.10.61"};
 
-//#define SERVER_IP           "192.168.10.11" 
+#define SERVER_IP           "192.168.10.80" 
 #define SERVER_PORT         5005            // The port to listen on (must match server's port)
 
 
@@ -44,7 +44,7 @@ string gantry_IN =      R"({
                             "ServertoDevice": {
                                 "Type": "Command",
                                 "Device": "Gantry In",
-                                "IP":"192.168.10.60",
+                                "IP":"192.168.10.61",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Bay 1", "Value": "AVF-461" },
@@ -79,22 +79,22 @@ string gantry_OUT =      R"({
                         })";
 
 string gate_IN =        R"({
-                            "ServertoDevice": {
-                                "Type": "Command",
-                                "Device": "Gate In",
-                                "IP":"192.168.10.60",
-                                "Port":10001,
-                                "Data": [
-                                { "Name": "Data", "Value": "GXP-468" }
-                                ]
-                            }
+                                "ServertoDevice": {
+                                    "Type": "Command",
+                                    "Device": "Gate In",
+                                    "IP":"192.168.10.61",
+                                    "Port":10001,
+                                    "Data": [
+                                    { "Name": "Data", "Value": "GXP-468" }
+                                    ]
+                                }
                         })";
 
 string gate_OUT =       R"({
                             "ServertoDevice": {
                                 "Type": "Command",
                                 "Device": "Gate Out",
-                                "IP":"192.168.10.60",
+                                "IP":"192.168.10.61",
                                 "Port":10001,
                                 "Data": [
                                 { "Name": "Data", "Value": "AXY-683" }
@@ -380,8 +380,8 @@ static void ReadData(HSession *currSession, const char *data, huint32 len, void 
     printf("--------------Read Data:--------------\n");   
     printf("  currSession: %p,\t userData: %p,\t len: %u\n", (void*)currSession, userData, (unsigned int)len);
     printf("  data:        %s\n", data);
-    IPData = data; // Store the received data in the global variable
-    cout<<"IPData: "<<IPData<<endl;
+    //IPData = data; // Store the received data in the global variable
+    //cout<<"IPData: "<<IPData<<endl;
     printf("-------------------------------------\n");
     Quit(core);
 }
@@ -415,29 +415,6 @@ static void NetStatus(HSession *currSession, eNetStatus status, void *userData) 
     }
     fflush(stdout);
 }
-// Callback function to handle detected device information
-// static void DeviceInfo(HSession *currSession, const char *id, huint32 idLen, const char *ip, huint32 ipLen, const char *readData, huint32 dataLen, void *userData) {
-//     printf("id[%s], ip[%s]\n", id, ip);  // Print device ID and IP address
-// }
-
-/*
-static void DeviceInfo(HSession *currSession, const char *id, huint32 idLen, const char *ip, huint32 ipLen, const char *readData, huint32 dataLen, void *userData) {
-    printf("--------------DeviceInfo:--------------\n");
-    printf("  currSession: %p\n", (void*)currSession);
-    printf("  id:          %.*s\n", (int)idLen, id);
-    printf("  idLen:       %u\n", (unsigned int)idLen);
-    printf("  ip:          %.*s\n", (int)ipLen, ip);
-    printf("  ipLen:       %u\n", (unsigned int)ipLen);
-    printf("  readData:    %.*s\n", (int)dataLen, readData);
-    printf("  dataLen:     %u\n", (unsigned int)dataLen);
-    printf("  userData:    %p\n", userData);
-    printf("-------------------------------------\n");
-}
-*/
-
-// function to get ip adress of the computer
-
-
 
 // Graceful shutdown function when Ctrl+C is pressed  or window is closed
 BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
@@ -448,18 +425,7 @@ BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
     return FALSE;  // Let other handlers process this event
 }
 
-// Custom exception class
-// class SocketException : public std::runtime_error {
-//     public:
-//         SocketException(const std::string& message, int errorCode = 0)
-//             : std::runtime_error(message + " (Code: " + std::to_string(errorCode) + ")"),
-//             errorCode_(errorCode) {}
-        
-//         int getErrorCode() const { return errorCode_; }
-    
-//     private:
-//         int errorCode_;
-//     };
+
 
 // Function to upload the text to the display
 void Display(HSession* session) {
@@ -505,32 +471,33 @@ void Display(HSession* session) {
     Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
 }
 
-void HandleBrightness(HSession* session) {
-    char finalXml[310] = ""; // Ensure it's large enough
+// void HandleBrightness(HSession* session) {
+//     char finalXml[310] = ""; // Ensure it's large enough
 
-    const char* xmlTemplate = brightnessXML; // Macro to define the XML template
-    snprintf(finalXml, sizeof(finalXml), xmlTemplate, brightnessData.c_str()); // Construct the XML command
-    // Construct the brightness XML command.
-    if (Connect(session, Device_IP, Device_Port)) {
-        // Send the XML command over the session
-        if (SendSDK(session, finalXml, strlen(finalXml))) {
-            printf("Brightness Updated Successfully.\n");
-        } else {
-            printf("Failed to update brightness.\n");
-        }
-    } else {
-        printf("Connection to the device failed.\n");
-    }
-    Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
-}
+//     const char* xmlTemplate = brightnessXML; // Macro to define the XML template
+//     snprintf(finalXml, sizeof(finalXml), xmlTemplate, brightnessData.c_str()); // Construct the XML command
+//     // Construct the brightness XML command.
+//     if (Connect(session, Device_IP, Device_Port)) {
+//         // Send the XML command over the session
+//         if (SendSDK(session, finalXml, strlen(finalXml))) {
+//             printf("Brightness Updated Successfully.\n");
+//         } else {
+//             printf("Failed to update brightness.\n");
+//         }
+//     } else {
+//         printf("Connection to the device failed.\n");
+//     }
+//     Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
+// }
 
 void ScreenFunction(HSession* session){
     cout<<"the screen function to: "<<ScreenFunc<<endl;
-    char finalXml[310] = ""; // Ensure it's large enough
-    const char* xmlTemplate = XML_SCREEN; // Macro to define the XML template
-    snprintf(finalXml, sizeof(finalXml), xmlTemplate,ScreenFunc); // Construct the XML command
+    char finalXml[310] = "";                                                // Ensure it's large enough
+    const char* xmlTemplate = XML_SCREEN;                                   // Macro to define the XML template
+    snprintf(finalXml, sizeof(finalXml), xmlTemplate,ScreenFunc);           // Construct the XML command
     //cout<<"Final XML is: "<<finalXml<<endl;
     if (Connect(session, Device_IP, Device_Port)) {
+
         // Send the XML command over the session
         if (SendSDK(session, finalXml, strlen(finalXml))) {
             printf("Screen command sent to the display.\n");
@@ -563,27 +530,27 @@ void GetIP(HSession* session) {
     Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
 }
 
-void ReadIPData() {
-    cout<<"IPData is: "<<IPData<<endl;
-    if (IPData == "") {
-        std::cout << "No IP data received!" << std::endl;
+// void ReadIPData() {
+//     cout<<"IPData is: "<<IPData<<endl;
+//     if (IPData == "") {
+//         std::cout << "No IP data received!" << std::endl;
   
-    }else{
-        tinyxml2::XMLDocument doc;
-        doc.Parse(IPData.c_str());
+//     }else{
+//         tinyxml2::XMLDocument doc;
+//         doc.Parse(IPData.c_str());
 
-        tinyxml2::XMLElement* ethElement = doc.FirstChildElement("sdk")->FirstChildElement("out")->FirstChildElement("eth");
-        if (ethElement) {
-            const char* ip = ethElement->FirstChildElement("address")->Attribute("ip");
-            if (ip) {
-                std::cout << "Extracted IP: " << ip << std::endl;
-            } else {
-                std::cout << "IP address not found!" << std::endl;
-            }
-        }
-        IPData = ""; // Reset IPData to nullptr after processing
-    }
-} 
+//         tinyxml2::XMLElement* ethElement = doc.FirstChildElement("sdk")->FirstChildElement("out")->FirstChildElement("eth");
+//         if (ethElement) {
+//             const char* ip = ethElement->FirstChildElement("address")->Attribute("ip");
+//             if (ip) {
+//                 std::cout << "Extracted IP: " << ip << std::endl;
+//             } else {
+//                 std::cout << "IP address not found!" << std::endl;
+//             }
+//         }
+//         IPData = ""; // Reset IPData to nullptr after processing
+//     }
+// } 
 
 void SetIP(HSession* session) {
     char finalXml[500] = ""; // Ensure it's large enough
@@ -747,97 +714,7 @@ void cleanup_resources(SOCKET sock, HSession* session) {
 }
 
 
-// Function to get local IP addresses
-std::vector<std::string> getLocalIPAddresses() {
-    std::vector<std::string> ipAddresses;
-    
-    // Initialize Winsock
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "WSAStartup failed" << std::endl;
-        return ipAddresses;
-    }
-    
-    // Get the local hostname
-    char hostname[256];
-    if (gethostname(hostname, sizeof(hostname)) != 0) {
-        std::cerr << "Error getting hostname" << std::endl;
-        WSACleanup();
-        return ipAddresses;
-    }
-    
-    std::cout << "Hostname: " << hostname << std::endl;
-    
-    // Set up hints for getaddrinfo
-    struct addrinfo hints, *res;
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;      // IPv4
-    hints.ai_socktype = SOCK_STREAM;
-    
-    // Get address info for the hostname
-    if (getaddrinfo(hostname, NULL, &hints, &res) != 0) {
-        std::cerr << "Error getting address info" << std::endl;
-        WSACleanup();
-        return ipAddresses;
-    }
-    
-    // Iterate through all addresses
-    char ipstr[INET_ADDRSTRLEN];
-    for (struct addrinfo* p = res; p != NULL; p = p->ai_next) {
-        struct sockaddr_in* ipv4 = (struct sockaddr_in*)p->ai_addr;
-        inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
-        std::string ip = std::string(ipstr);
-        
-        // Add IP address if it's not a loopback address
-        if (ip != "127.0.0.1") {
-            ipAddresses.push_back(ip);
-        }
-    }
-    
-    // Clean up
-    freeaddrinfo(res);
-    WSACleanup();
-    
-    return ipAddresses;
-}
 
-// Function to get the most likely "main" IP address
-std::string getMainLocalIPAddress() {
-    auto addresses = getLocalIPAddresses();
-    
-    // First look for addresses in the 192.168.x.x range (common for home networks)
-    for (const auto& ip : addresses) {
-        if (ip.substr(0, 8) == "192.168.") {
-            return ip;
-        }
-    }
-    
-    // Then look for 10.x.x.x addresses (common for larger networks)
-    for (const auto& ip : addresses) {
-        if (ip.substr(0, 3) == "10.") {
-            return ip;
-        }
-    }
-    
-    // Then look for 172.16.x.x through 172.31.x.x addresses
-    for (const auto& ip : addresses) {
-        if (ip.substr(0, 4) == "172." && 
-            std::stoi(ip.substr(4, ip.find('.', 4) - 4)) >= 16 && 
-            std::stoi(ip.substr(4, ip.find('.', 4) - 4)) <= 31) {
-            return ip;
-        }
-    }
-    
-    // If we haven't found a private address yet, return the first non-APIPA address
-    for (const auto& ip : addresses) {
-        if (ip.substr(0, 8) != "169.254.") {
-            return ip;
-        }
-    }
-    
-    // As a last resort, return any address we found
-    return addresses.empty() ? "" : addresses[0];
-}
 
 int main() {    
 
@@ -854,7 +731,7 @@ int main() {
     int addr_len = sizeof(client_addr);
 
      // Get and display the main IP address
-     std::string mainIP = getMainLocalIPAddress();
+     std::string mainIP = SERVER_IP;
     //  std::cout << "\nMain IP address: " << (mainIP.empty() ? "Not found" : mainIP) << std::endl;
 
     // Create the event core.
@@ -918,47 +795,6 @@ int main() {
         cleanup_resources(sock, session);  // All resources created
         return -1;
     }
-
-    // running tests 
-    // cout<<"Display Off"<<endl;
-    // deserializeJson(ConfigPowerOff);
-    // ScreenFunction(session); // Call the ScreenFunction to turn off the display
-    // Sleep(30000);
-    // cout<<"Display On"<<endl;
-    // deserializeJson(ConfigPowerOn);
-    // ScreenFunction(session); // Call the ScreenFunction to turn on the display
-    // Sleep(3000);    
-    // cout<<"Changing brightness"<<endl;
-    // deserializeJson(gateConfig);
-    // HandleBrightness(session); // Call the HandleBrightness function to update the brightness
-    // cout<<"gantry in"<<endl;
-    // deserializeJson(gate_IN);
-    // Display(session); // Call the Display function to update the display
-    // Sleep(3000);
-    // cout<<"gate in"<<endl;
-    // deserializeJson(gantry_IN);
-    // Display(session); // Call the Display function to update the display
-    // Sleep(3000);
-    // cout<<"Get IP"<<endl;
-    // deserializeJson(GetIPCommand);
-    // GetIP(session); // Call the GetIP function to get the IP info
-    // ReadIPData(); // Call the getEth0Info function to get the IP info
-    // Sleep(3000);
-    // cout<<"Reboot"<<endl;
-    // deserializeJson(ConfigReboot);
-    // ScreenFunction(session); // Call the ScreenFunction to turn off the display
-    // Sleep(15000);
-    // cout<<"Set IP"<<endl;
-    // deserializeJson(SetIPCommand);
-    // SetIP(session); // Call the SetIP function to set the IP address
-    // Sleep(3000);
-    // cout<<"changing brightness"<<endl;
-    // deserializeJson(gateConfig1);
-    // HandleBrightness(session); // Call the HandleBrightness function to update the brightness
-    // Sleep(3000);
-    // cout<<"Testing Complete"<<endl;
-
-   
  
     printf("Socket created and bound to %s : %d \n",mainIP.c_str(), SERVER_PORT);    
 
@@ -987,25 +823,25 @@ int main() {
 
                 if (strcmp(Type, "Command") == 0) {
                     Display(session); // Call the Display function to update the display
-                } else if (strcmp(Type, "Configuration") == 0){
-                    if (strcmp(Name, "Brightness") == 0) {
-                        HandleBrightness(session); // Call the HandleBrightness function to update the brightness
-                    } else if((strcmp(ScreenFunc, "Reboot") == 0) || (strcmp(ScreenFunc, "Screen") == 0)) {
-                        ScreenFunction(session); // Call the HandlePowerSettings function to update the Power Settings
-                    } else if (strcmp(Name, "GetIP") == 0){
-                        GetIP(session);
-                        ReadIPData(); // Call the getEth0Info function to get the IP info
+                // } else if (strcmp(Type, "Configuration") == 0){
+                    // if (strcmp(Name, "Brightness") == 0) {
+                    //     HandleBrightness(session); // Call the HandleBrightness function to update the brightness
+                    // } else if((strcmp(ScreenFunc, "Reboot") == 0) || (strcmp(ScreenFunc, "Screen") == 0)) {
+                    //     ScreenFunction(session); // Call the HandlePowerSettings function to update the Power Settings
+                    // // } else if (strcmp(Name, "GetIP") == 0){
+                    //     GetIP(session);
+                    //     ReadIPData(); // Call the getEth0Info function to get the IP info
                         // SetNetSession(session, kReadyReadUserData,reinterpret_cast<void *>(ReadIPData));
-                    } else if (strcmp(Name, "SetIP") == 0){
-                        SetIP(session);
-                    } else if (strcmp(Name, "GetFirmwareInfo") == 0){
-                        GetDeviceInfo(session);
+                    // } else if (strcmp(Name, "SetIP") == 0){
+                    //     SetIP(session);
+                    // } else if (strcmp(Name, "GetFirmwareInfo") == 0){
+                    //     GetDeviceInfo(session);
                     }
                 }
                 lastMessage = buffer;  // Update the last received message
             }
             
-        }
+        //}
         else if (strlen(buffer) == 0) {
             printf("Buffer is empty (strlen == 0).\n");
             Sleep(1000);  // Sleep for a short duration before retrying

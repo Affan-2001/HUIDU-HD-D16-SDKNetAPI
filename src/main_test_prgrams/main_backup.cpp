@@ -374,7 +374,7 @@ static void ReadData(HSession *currSession, const char *data, huint32 len, void 
     printf("  currSession: %p,\t userData: %p,\t len: %u\n", (void*)currSession, userData, (unsigned int)len);
     printf("  data:        %s\n", data);
     IPData = data; // Store the received data in the global variable
-    cout<<"IPData: "<<IPData<<endl;
+    cout<<"IPData: "<<IPData<<endl; // this is for passsinng the IP value to the IP extraction fuction to get the IP of the board.
     printf("-------------------------------------\n");
     Quit(core);
 }
@@ -727,11 +727,12 @@ int main() {
         WSACleanup();
         return -1;
     }
-
-     cout<<"Getting IP info"<<endl;
-     deserializeJson(GetIPCommand); // Call the deserializeJson function to parse the JSON string
-     GetIP(session); // Call the getEth0Info function to get the IP info
-     ReadIPData(); // Call the ReadIPData function to read the IP data
+    
+    // ye sab test hain
+    //  cout<<"Getting IP info"<<endl;
+    //  deserializeJson(GetIPCommand); // Call the deserializeJson function to parse the JSON string
+    //  GetIP(session); // Call the getEth0Info function to get the IP info
+    //  ReadIPData(); // Call the ReadIPData function to read the IP data
     //  Sleep(5000);
     //  cout<<"Changing the IP address to 192.168.10.60"<<endl;
     //  deserializeJson(SetIPCommand);
