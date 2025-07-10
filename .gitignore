@@ -10,3 +10,4 @@ Debug/
 # Ignore IDE-specific files
 .vscode/
 .idea/  
+*.ipch
