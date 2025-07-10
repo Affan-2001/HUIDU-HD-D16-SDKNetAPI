@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Debug)
 # Add external library (TinyXML2)
-add_subdirectory(external/tinyxml2)
+add_subdirectory(external/tinyxml2) 
 
 link_directories(${CMAKE_SOURCE_DIR}/lib64)
 

@@ -4,7 +4,11 @@
 #include <ArduinoJson.h>
 #include <windows.h>
 #include <vector>
-#include <algorithm> 
+#include <algorithm>
+#include <atomic>
+#include <thread>
+// #define _CRTDBG_MAP_ALLOC
+// #include <crtdbg.h>
 
 using namespace std;
 using namespace ArduinoJson::V731HB42;
@@ -22,10 +26,10 @@ string Gate_TL = "";
 
 const char* Name = nullptr;
 const char* ScreenFunc= nullptr;
-std::vector<std::string> IPDB = {"192.168.10.61"};
+std::vector<std::string> IPDB = {"192.168.19.61"};
 
-#define SERVER_IP           "192.168.10.80" 
-#define SERVER_PORT         5005            // The port to listen on (must match server's port)
+#define SERVER_IP           "192.168.19.62" 
+#define SERVER_PORT         5000            // The port to listen on (must match server's port)
 
 #define Gate_IN_Greeting    "پی ایس او فیصل آباد ٹرمینل میں خوش آمدید"
 #define Gate_OUT_Greeting    "پی ایس او فیصل آباد ٹرمینل خدا حافظ"
@@ -79,6 +83,7 @@ static void DebugLog(HSession *currSession, const char *log, huint32 len, void *
     printf("  log:         %s\n", log);   
     printf("-------------------------------------\n");
     fflush(stdout);
+    //Quit(core);
 }
 
 // Callback function to handle connection status
@@ -98,7 +103,7 @@ static void NetStatus(HSession *currSession, eNetStatus status, void *userData) 
     default:
         break;
     }
-    fflush(stdout);
+    //Quit(core);
 }
 
 // Callback function to handle detected device information
@@ -160,7 +165,7 @@ void Display(HSession* session) {
     } else {
         printf("Connection to the device failed.\n");
     }
-    Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
+    //Exec(core); // Blocks the main thread and waits for Quit to be called from ReadData callback
 }
 
 int deserializeJson(string json) {
@@ -222,8 +227,7 @@ void cleanup_resources(SOCKET sock, HSession* session) {
     if (core) {
         FreeEventCore(core);
     }
-    
-    printf("Resources cleaned up successfully\n");
+
 }
 
 int main() {    
@@ -232,9 +236,12 @@ int main() {
     struct sockaddr_in server_addr, client_addr;
     char buffer[2048];
     int addr_len = sizeof(client_addr);
-    DWORD lastExecTime = GetTickCount(); // Initialize timer
-    const DWORD intervalMs = 5000;
+    // DWORD lastExecTime = GetTickCount(); // Initialize timer
+    // const DWORD intervalMs = 90 * 1000;
     
+    // Enable automatic leak detection at program exit
+    //_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
     // Set up console handler
     if (!SetConsoleCtrlHandler(ConsoleHandler, TRUE)) {
         cerr << "Failed to set control handler!" << endl;
@@ -243,6 +250,15 @@ int main() {
     
     // Create the event core.
     core = CreateEventCore();
+    std::atomic<bool> running = true;
+
+    std::thread eventLoopThread([&] {
+        while (running) {
+            Exec(core);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        }
+    }); 
+
     if (!core) {
         cerr << "Failed to create event core!" << endl;
         cleanup_resources(INVALID_SOCKET, nullptr);  // No resources allocated yet
@@ -306,9 +322,15 @@ int main() {
     printf("Socket created and bound to %s : %d \n",SERVER_IP, SERVER_PORT);
     
     string lastMessage;  // Store the last received message
+
+    // _CrtMemState sOld;
+    // _CrtMemState sNew;
+    // _CrtMemState sDiff;
+    // _CrtMemCheckpoint(&sOld); //take a snapshot
+
     while (!g_shutdown) 
     {    
-        int n = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)&client_addr, &addr_len);     
+        int n = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)&client_addr, &addr_len);    
         if (n > 0){
             buffer[n] = '\0';  // Null-terminate the received string
             //printf("\nReceived new message: %s\n", buffer);                  
@@ -335,24 +357,42 @@ int main() {
             if (errorCode == WSAEWOULDBLOCK) {
                 // No data available, continue polling
                 //Sleep(10);  // Small sleep to prevent CPU overuse (optional, see Option 2 for better approach)
-                continue;
+                memset(buffer, 0, sizeof(buffer));
+                
             } else {
                 // Handle actual errors
                 printf("recvfrom failed with error code: %d\n", errorCode);
                 Sleep(1000);  // Sleep for a short duration before retrying
-                continue;
+              
+                memset(buffer, 0, sizeof(buffer));
             }
         } else {
             Sleep(500);  // Sleep for a short duration before retrying
-            printf("No new message received.\n");
+            memset(buffer, 0, sizeof(buffer));
         }
+        // _CrtMemCheckpoint(&sNew); //take a snapshot 
+        // if (_CrtMemDifference(&sDiff, &sOld, &sNew)) // if there is a difference
+        // {
+        //     OutputDebugString(L"-----------_CrtMemDumpStatistics ---------");
+        //     _CrtMemDumpStatistics(&sDiff);
+        //     OutputDebugString(L"-----------_CrtMemDumpAllObjectsSince ---------");
+        //     _CrtMemDumpAllObjectsSince(&sOld);
+        //     OutputDebugString(L"-----------_CrtDumpMemoryLeaks ---------");
+        //     _CrtDumpMemoryLeaks();
+        // }
        // --- Timer logic to call Exec(core) every intervalMs milliseconds ---
-        DWORD now = GetTickCount();
-        if (now - lastExecTime >= intervalMs) {
-            Quit(core); // Call your SDK event loop
-            lastExecTime = now;
-        }
+        // DWORD now = GetTickCount();
+        // if (now - lastExecTime >= intervalMs) {
+        //     Quit(core);       // clean up old one
+        //     Exec(core); // Call Exec to process the event core
+        //     lastExecTime = now;
+        //     printf("Exec called at %lu ms\n", now);
+        
+        
     }
+    running = false;
+    Quit(core);
+    eventLoopThread.join();
     printf("Exiting the loop \n");
     cleanup_resources(sock, session);
     return 0;
